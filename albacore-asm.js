@@ -21,8 +21,8 @@ class Assembler {
     	this.initialize();
     	
     	this.text_instructions = [
-	    {regex: /add\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)/, assembler: this.assemble_add},
-	    {regex: /ldi\s+(?<rw>r[0-9]+)\s*,\s*(?<imm8>[0-9a-zA-ZxX]+)/         , assembler: this.assemble_ldi}
+	    {regex: /add\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)/, assembler: this.assemble_add.bind(this)},
+	    {regex: /ldi\s+(?<rw>r[0-9]+)\s*,\s*(?<imm8>[0-9a-zA-ZxX]+)/         , assembler: this.assemble_ldi.bind(this)}
     	];
     }
 
@@ -33,8 +33,15 @@ class Assembler {
 	this.memory_segment = MEMORY_SEGMENT.text;
     }
 
+    assemble_lop(op, rw, ra, rb) {
+	rw = parseInt(rw.slice(1)).toString(16);
+	ra = parseInt(ra.slice(1)).toString(16);
+	rb = parseInt(rb.slice(1)).toString(16);
+	return op + rw + ra + rb;
+    }
+
     assemble_add(rw, ra, rb) {
-    	return Assembler.assemble_lop("0", rw, ra, rb);
+    	return this.assemble_lop("0", rw, ra, rb);
     }
 
     assemble_ldi(rw, imm8) {
@@ -47,18 +54,11 @@ class Assembler {
 	return "7" + rw + imm8;
     }
     
-    static assemble_lop(op, rw, ra, rb) {
-	rw = parseInt(rw.slice(1)).toString(16);
-	ra = parseInt(ra.slice(1)).toString(16);
-	rb = parseInt(rb.slice(1)).toString(16);
-	return op + rw + ra + rb;
-    }
-    
-    static assemble_text() {
+    static assemble_source() {
     	let assembler = new Assembler();
 
 	// Extract assembly text from text area and split into lines
-	let source_text  = document.getElementById("albacore_text").value;
+	let source_text  = document.getElementById("albacore_source").value;
 	let source_lines = source_text.split('\n');
 
 	for (let line of source_lines) {
