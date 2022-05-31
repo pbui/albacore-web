@@ -119,10 +119,6 @@ class Assembler {
                     const binary = text_instruction.assembler(...match.slice(1));
                     const label  = "";      // TODO: figure out label
 
-                    if (source == "quit") { // XXX: Is this a hack?
-                        source = "sys 0";
-                    }
-
                     this.text_memory.push(new TextInstruction(
                         number, binary, source, label
                     ));
