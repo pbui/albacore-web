@@ -31,6 +31,10 @@ class Assembler {
         this.text_instructions = [
             {regex:     /add\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)/,
              assembler: this.assemble_add.bind(this)},
+            {regex:     /or\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)/,
+             assembler: this.assemble_or.bind(this)},
+            {regex:     /shl\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)/,
+             assembler: this.assemble_shl.bind(this)},
             {regex:     /ldi\s+(?<rw>r[0-9]+)\s*,\s*(?<imm8>[0-9a-zA-ZxX]+)/,
              assembler: this.assemble_ldi.bind(this)},
             {regex:     /st\s+(?<ra>r[0-9]+)\s*,\s*(?<rb>r[0-9]+),\s*(?<imm4>[0-9a-zA-ZxX]+)/,
@@ -57,6 +61,14 @@ class Assembler {
 
     assemble_add(rw, ra, rb) {
         return this.assemble_3op("0", rw, ra, rb);
+    }
+
+    assemble_or(rw, ra, rb) {
+        return this.assemble_3op("3", rw, ra, rb);
+    }
+
+    assemble_shl(rw, ra, rb) {
+        return this.assemble_3op("5", rw, ra, rb);
     }
 
     assemble_ldi(rw, imm8) {
