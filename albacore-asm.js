@@ -116,18 +116,20 @@ class Assembler {
     // Parsing methods
 
     parse_operand(operand, width = 1) {
-        if (operand.startsWith("r")) {
-            operand = operand.slice(1);
-        }
-
+        // Parse label operands
         var highMatch = operand.match(/high\((?<label>.+)\)/);
         if (highMatch) {
-            operand = "0x" + this.labels[highMatch[1]].slice(0, 2);
+            return this.labels[highMatch[1]].slice(0, 2);
         }
 
         var lowMatch = operand.match(/low\((?<label>.+)\)/);
         if (lowMatch) {
-            operand = "0x" + this.labels[lowMatch[1]].slice(2, 4);
+            return this.labels[lowMatch[1]].slice(2, 4);
+        }
+
+        // Parse integer operands
+        if (operand.startsWith("r")) {
+            operand = operand.slice(1);
         }
 
         if (operand.startsWith("0x")) {
