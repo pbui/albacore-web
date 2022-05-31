@@ -29,9 +29,14 @@ class Assembler {
         this.initialize();
 
         this.text_instructions = [
-            {regex: /add\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)/, assembler: this.assemble_add.bind(this)},
-            {regex: /ldi\s+(?<rw>r[0-9]+)\s*,\s*(?<imm8>[0-9a-zA-ZxX]+)/         , assembler: this.assemble_ldi.bind(this)},
-            {regex: /quit/                                                       , assembler: this.assemble_quit.bind(this)}
+            {regex:     /add\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)/,
+             assembler: this.assemble_add.bind(this)},
+            {regex:     /ldi\s+(?<rw>r[0-9]+)\s*,\s*(?<imm8>[0-9a-zA-ZxX]+)/,
+             assembler: this.assemble_ldi.bind(this)},
+            {regex:     /st\s+(?<ra>r[0-9]+)\s*,\s*(?<rb>r[0-9]+),\s*(?<imm4>[0-9a-zA-ZxX]+)/,
+             assembler: this.assemble_st.bind(this)},
+            {regex:     /quit/,
+             assembler: this.assemble_quit.bind(this)}
         ];
     }
 
@@ -43,25 +48,25 @@ class Assembler {
 
     // Assembly methods
 
-    assemble_lop(op, rw, ra, rb) {
-        rw = parseInt(rw.slice(1)).toString(16);
-        ra = parseInt(ra.slice(1)).toString(16);
-        rb = parseInt(rb.slice(1)).toString(16);
+    assemble_3op(op, rw, ra, rb) {
+        rw = this.parse_operand(rw);
+        ra = this.parse_operand(ra);
+        rb = this.parse_operand(rb);
         return op + rw + ra + rb;
     }
 
     assemble_add(rw, ra, rb) {
-        return this.assemble_lop("0", rw, ra, rb);
+        return this.assemble_3op("0", rw, ra, rb);
     }
 
     assemble_ldi(rw, imm8) {
-        rw = parseInt(rw.slice(1)).toString(16);
-        if (imm8.startsWith("0x")) {
-            imm8 = imm8.slice(2).padStart(2, "0");
-        } else {
-            imm8 = parseInt(imm8).toString(16).padStart(2, "0");
-        }
+        rw   = this.parse_operand(rw);
+        imm8 = this.parse_operand(imm8, 2);
         return "7" + rw + imm8;
+    }
+
+    assemble_st(ra, rb, imm4) {
+        return this.assemble_3op("9", imm4, ra, rb);
     }
 
     assemble_quit() {
@@ -69,6 +74,17 @@ class Assembler {
     }
 
     // Parsing methods
+
+    parse_operand(integer, width = 1) {
+        if (integer.startsWith("r")) {
+            integer = integer.slice(1);
+        }
+        if (integer.startsWith("0x")) {
+            return integer.slice(2).padStart(2, "0");
+        } else {
+            return parseInt(integer).toString(16).padStart(width, "0");
+        }
+    }
 
     parse_segment_lines(source_lines) {
         let data_lines = [];
@@ -127,7 +143,7 @@ class Assembler {
             }
 
             if (!foundInstruction) {
-                console.log(`Invalid text instruction: ${text_line}`);
+                console.log(`Invalid text instruction: ${source}`);
                 return false;
             }
         }
