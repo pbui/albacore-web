@@ -9,18 +9,30 @@ const MEMORY_SEGMENTS = Object.freeze({
 
 /* Classes */
 
-class TextInstruction {
-    constructor(number, binary, source, label) {
+class DataLabel {
+    constructor(number, binary, label) {
         this.number = number;
         this.binary = binary;
-        this.source = source;
         this.label  = label;
     }
 
     toString() {
         let number = this.number.toString(16).padStart(4, "0");
-        let label  = this.label ? `\ttarget label: ${this.label}` : "";
-        return `@${number} ${this.binary} // ${this.source}${label}`;
+        let label  = this.label ? ` label: ${this.label}` : "";
+        return `@${number} ${this.binary} //${label}`;
+    }
+}
+
+class TextInstruction {
+    constructor(number, binary, source, label) {
+        this.number = number;
+        this.binary = binary;
+        this.source = source;
+    }
+
+    toString() {
+        let number = this.number.toString(16).padStart(4, "0");
+        return `@${number} ${this.binary} // ${this.source}`;
     }
 }
 
@@ -28,18 +40,23 @@ class Assembler {
     constructor() {
         this.initialize();
 
+        this.data_instructions = [
+            {regex:     /^(?<label>[0-9a-zA-Z]):\s*(?<value>[0-9a-zA-ZxX]+)$/,
+             assembler: this.assemble_integer.bind(this)}
+        ]
+
         this.text_instructions = [
-            {regex:     /add\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)/,
+            {regex:     /^add\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)$/,
              assembler: this.assemble_add.bind(this)},
-            {regex:     /or\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)/,
+            {regex:     /^or\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)$/,
              assembler: this.assemble_or.bind(this)},
-            {regex:     /shl\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)/,
+            {regex:     /^shl\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)$/,
              assembler: this.assemble_shl.bind(this)},
-            {regex:     /ldi\s+(?<rw>r[0-9]+)\s*,\s*(?<imm8>[0-9a-zA-ZxX]+)/,
+            {regex:     /^ldi\s+(?<rw>r[0-9]+)\s*,\s*(?<imm8>.+)$/,
              assembler: this.assemble_ldi.bind(this)},
-            {regex:     /st\s+(?<ra>r[0-9]+)\s*,\s*(?<rb>r[0-9]+),\s*(?<imm4>[0-9a-zA-ZxX]+)/,
+            {regex:     /^st\s+(?<ra>r[0-9]+)\s*,\s*(?<rb>r[0-9]+),\s*(?<imm4>.+)$/,
              assembler: this.assemble_st.bind(this)},
-            {regex:     /quit/,
+            {regex:     /^quit$/,
              assembler: this.assemble_quit.bind(this)}
         ];
     }
@@ -48,6 +65,7 @@ class Assembler {
         // Initialize memory segments and default to parsing text segment
         this.data_memory = [];
         this.text_memory = [];
+        this.labels      = {};
     }
 
     // Assembly methods
@@ -57,6 +75,10 @@ class Assembler {
         ra = this.parse_operand(ra);
         rb = this.parse_operand(rb);
         return op + rw + ra + rb;
+    }
+
+    assemble_integer(integer) {
+        return [this.parse_operand(integer, 4)];
     }
 
     assemble_add(rw, ra, rb) {
@@ -87,14 +109,25 @@ class Assembler {
 
     // Parsing methods
 
-    parse_operand(integer, width = 1) {
-        if (integer.startsWith("r")) {
-            integer = integer.slice(1);
+    parse_operand(operand, width = 1) {
+        if (operand.startsWith("r")) {
+            operand = operand.slice(1);
         }
-        if (integer.startsWith("0x")) {
-            return integer.slice(2).padStart(2, "0");
+
+        var highMatch = operand.match(/high\((?<label>.+)\)/);
+        if (highMatch) {
+            operand = "0x" + this.labels[highMatch[1]].slice(0, 2);
+        }
+
+        var lowMatch = operand.match(/low\((?<label>.+)\)/);
+        if (lowMatch) {
+            operand = "0x" + this.labels[lowMatch[1]].slice(2, 4);
+        }
+
+        if (operand.startsWith("0x")) {
+            return operand.slice(2).padStart(2, "0");
         } else {
-            return parseInt(integer).toString(16).padStart(width, "0");
+            return parseInt(operand).toString(16).padStart(width, "0");
         }
     }
 
@@ -131,8 +164,32 @@ class Assembler {
 
     // Memory segment assembly methods
 
-    assemble_data_segment(data_lines) {
-        // TODO: Parse data literals and arrays
+    assemble_data_segment(data_lines, data_offset) {
+        for (const source of data_lines) {
+            let parsedLabel = false;
+
+            for (const data_instruction of this.data_instructions) {
+                let match = source.match(data_instruction.regex);
+                if (match) {
+                    const label   = match[1];
+                    const values  = data_instruction.assembler(match[2]);
+                    const address = data_offset + this.data_memory.length;
+
+                    this.labels[label] = address.toString().padStart(4, "0");
+                    this.data_memory   = this.data_memory.concat(values.map((value, index) =>
+                        new DataLabel(address + index, value, index ? "" : label)
+                    ));
+
+                    parsedLabel = true;
+                }
+            }
+
+            if (!parsedLabel) {
+                console.log(`Invalid data label: ${source}`);
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -145,10 +202,9 @@ class Assembler {
                 let match = source.match(text_instruction.regex);
                 if (match) {
                     const binary = text_instruction.assembler(...match.slice(1));
-                    const label  = "";      // TODO: figure out label
 
                     this.text_memory.push(new TextInstruction(
-                        number, binary, source, label
+                        number, binary, source
                     ));
                     foundInstruction = true;
                 }
@@ -174,11 +230,12 @@ class Assembler {
 
         const [data_lines, text_lines] = assembler.parse_segment_lines(source_lines);
 
-        assembler.assemble_data_segment(data_lines);
+        assembler.assemble_data_segment(data_lines, text_lines.length);
         assembler.assemble_text_segment(text_lines);
 
         var memory_textarea   = document.getElementById("albacore_memory");
-        memory_textarea.value = "// .text\n" + assembler.text_memory.join('\n');
+        memory_textarea.value = "// .text\n" + assembler.text_memory.join('\n') + "\n\n" +
+                                "// .data\n" + assembler.data_memory.join('\n');
     }
 }
 
