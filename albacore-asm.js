@@ -41,8 +41,10 @@ class Assembler {
         this.initialize();
 
         this.data_instructions = [
-            {regex:     /^(?<label>[0-9a-zA-Z]):\s*(?<value>[0-9a-zA-ZxX]+)$/,
-             assembler: this.assemble_integer.bind(this)}
+            {regex:     /^(?<label>[0-9a-zA-Z]):\s*(?<value>[0-9a-fA-FxX]+)$/,
+             assembler: this.assemble_integer.bind(this)},
+            {regex:     /^(?<label>[0-9a-zA-Z]):\s*(?<value>[0-9a-fA-FxX, \t]+)$/,
+             assembler: this.assemble_array.bind(this)}
         ]
 
         this.text_instructions = [
@@ -79,6 +81,10 @@ class Assembler {
 
     assemble_integer(integer) {
         return [this.parse_operand(integer, 4)];
+    }
+
+    assemble_array(array) {
+        return array.split(',').map(integer => this.parse_operand(integer, 4));
     }
 
     assemble_add(rw, ra, rb) {
@@ -175,12 +181,13 @@ class Assembler {
                     const values  = data_instruction.assembler(match[2]);
                     const address = data_offset + this.data_memory.length;
 
-                    this.labels[label] = address.toString().padStart(4, "0");
+                    this.labels[label] = address.toString(16).padStart(4, "0");
                     this.data_memory   = this.data_memory.concat(values.map((value, index) =>
                         new DataLabel(address + index, value, index ? "" : label)
                     ));
 
                     parsedLabel = true;
+                    break;
                 }
             }
 
@@ -206,7 +213,9 @@ class Assembler {
                     this.text_memory.push(new TextInstruction(
                         number, binary, source
                     ));
+
                     foundInstruction = true;
+                    break;
                 }
             }
 
