@@ -1,4 +1,4 @@
-// albaCore simple example
+// 3.2.3.2: albaCore simple example
 .text
 ldi r0, 5
 ldi r1, 0xf
