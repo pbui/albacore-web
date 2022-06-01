@@ -95,9 +95,9 @@ output**.
 
 ### TODOs
 
-- [ ] Support all opcodes
+- [o] Support all opcodes
 - [ ] Add web interface
-- [ ] Add tests
+- [o] Add tests
 
 [Jay Brockman]: https://sites.google.com/a/nd.edu/jay-brockman/home
 [Ubuntu]:       https://ubuntu.com
