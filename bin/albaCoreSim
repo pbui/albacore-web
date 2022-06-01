@@ -10,6 +10,12 @@ const ByteArray = imports.byteArray;
 const Gio       = imports.gi.Gio;
 const GLib	= imports.gi.GLib;
 
+// Functions
+
+function print(s) {
+    Stdout.write(s + "\n", null);
+}
+
 // Main Execution
 
 const Stdout	  = new Gio.DataOutputStream({base_stream: new Gio.UnixOutputStream({ fd: 1 })});
@@ -20,5 +26,5 @@ Simulator.load_from_string(InputString);
 while (!Simulator.halted) {
     Simulator.step_once();
 }
-Simulator.dump_registers();
-Simulator.dump_memory();
+Simulator.dump_registers(print);
+Simulator.dump_memory(print);
