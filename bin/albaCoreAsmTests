@@ -1,5 +1,7 @@
 #!/bin/bash
 
+FAILURES=0
+
 for asm_file in asm/*.s; do
     mem_file=${asm_file/.s/.mem};
 
@@ -15,5 +17,8 @@ for asm_file in asm/*.s; do
     else
     	echo FAIL
 	diff -y <(bin/albaCoreAsm $asm_file) $mem_file
+	FAILURES=$(($FAILURES + 1))
     fi
 done
+
+exit $FAILURES
