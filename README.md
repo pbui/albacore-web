@@ -8,6 +8,15 @@ architecture described in [Jay Brockman]'s [Practical Logic and Processor Design
 The **assembler** takes assembly source text (ie. `.s`) and translates into a
 **memory** image file.
 
+### Web Interface
+
+To run the **assembler** from a web browser, you simply need to open the
+`www/albaCoreAsm.html` file in your favorite web browser.
+
+Once you have it open, you can write the the assembly source text in the
+`source` textbox and then press the `Assemble` button to generate the
+**memory** image in the `memory` textbox.
+
 ### Command Line Interface
 
 To run the **assembler** from the command-line, you will need the following:
@@ -30,15 +39,6 @@ $ bin/albaCoreAsm asm/simple_demo.s
 This will run the `bin/albaCoreAsm` script which will invoke the `assembler`
 library and process the `asm/simple_demo.s` input assembly source text.  The
 resulting **memory** image will be emitted to **standard output**.
-
-### Web Interface
-
-To run the **assembler** from a web browser, you simply need to open the
-`www/albaCoreAsm.html` file in your favorite web browser.
-
-Once you have it open, you can write the the assembly source text in the
-`source` textbox and then press the `Assemble` button to generate the
-**memory** image in the `memory` textbox.
 
 ### Tests
 
