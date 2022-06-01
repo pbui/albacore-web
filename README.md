@@ -18,13 +18,15 @@ To run the **assembler** from the command-line, you will need the following:
 On [Ubuntu]-based distributions, you can install the necessary dependencies by
 doing the following:
 
-    :::bash
-    $ sudo apt install gjs gir1.2-glib-2.0
+```bash
+$ sudo apt install gjs gir1.2-glib-2.0
+```
     
 Once you have `gjs` installead, you can then run the **assembler** as follows:
 
-    :::bash
-    $ bin/albaCoreAsm asm/simple_demo.s
+```bash
+$ bin/albaCoreAsm asm/simple_demo.s
+```
     
 This will run the `bin/albaCoreAsm` script which will invoke the `assembler`
 library and process the `asm/simple_demo.s` input assembly source text.  The
@@ -57,3 +59,4 @@ architecture.
 
 
 [Jay Brockman]: https://sites.google.com/a/nd.edu/jay-brockman/home
+[Ubuntu]:       https://ubuntu.com
