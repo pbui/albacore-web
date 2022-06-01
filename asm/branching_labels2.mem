@@ -1,0 +1,10 @@
+// .text
+@0000 7101 // ldi r1, 1
+@0001 7204 // ldi r2, 4
+@0002 b032 // bz r2, continue
+@0003 1221 // sub r2, r2, r1
+@0004 afe0 // br loop_cond
+@0005 73ff // ldi r3, 0xff
+@0006 f000 // quit
+
+// .data
