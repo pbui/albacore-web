@@ -1,7 +1,7 @@
 # albacore-web: albaCore Assembler and Simulator in JavaScript
 
 This is a simple **assembler** and **simulator** for the **albaCore** computer
-architecture described in [Jay Brockman]'s [Practical Logic and Processor Design with Verilog].
+architecture described in [Jay Brockman]'s [Practical Logic and Processor Design with Verilog] written in **JavaScript**.
 
 ## Assembler
 
