@@ -16,7 +16,7 @@ The **assembler** takes assembly source text (ie. `.s`) and translates into a
 To run the **assembler** from a web browser, you simply need to open the
 `www/albaCoreAsm.html` file in your favorite web browser.
 
-Once you have it open, you can write the the assembly source text in the
+Once you have it open, you can write the assembly source text in the
 `source` textbox and then press the `Assemble` button to generate the
 **memory** image in the `memory` textbox.
 
@@ -33,13 +33,13 @@ doing the following:
 $ sudo apt install gjs gir1.2-glib-2.0
 ```
     
-Once you have `gjs` installead, you can then run the **assembler** as follows:
+Once you have `gjs` installed, you can then run the **assembler** as follows:
 
 ```bash
 $ bin/albaCoreAsm asm/simple_demo.s
 ```
     
-This will run the `bin/albaCoreAsm` script which will invoke the `assembler`
+This will run the `bin/albaCoreAsm` script which will invoke the **assembler**
 library and process the `asm/simple_demo.s` input assembly source text.  The
 resulting **memory** image will be emitted to **standard output**.
 
@@ -76,9 +76,27 @@ The **simulator ** takes the **memory** image file and executes the program
 instructions using a simulated implementation of the **albaCore** computer
 architecture.
 
+### Command Line Interface
+
+To run the **simulator** from the command-line, you will need the same
+dependencies as the **assembler**.
+
+Once you have `gjs` installed, you can then run the **assembler** as follows:
+
+```bash
+$ bin/albaCoreSim asm/simple_demo.mem
+```
+    
+This will run the `bin/albaCoreSim` script which will invoke the **simulator**
+library and process the `asm/simple_demo.mem` input memory image.  The
+resulting **register** and **memory** contents will be emitted to **standard
+output**.
+
 ### TODOs
 
-- [ ] Everything :]
+- [ ] Support all opcodes
+- [ ] Add web interface
+- [ ] Add tests
 
 [Jay Brockman]: https://sites.google.com/a/nd.edu/jay-brockman/home
 [Ubuntu]:       https://ubuntu.com
