@@ -1,0 +1,24 @@
+#!/bin/bash
+
+FAILURES=0
+
+for mem_file in asm/*.mem; do
+    txt_file=${mem_file/.mem/.txt};
+
+    printf "Simulating %-50s ... " "$mem_file"
+
+    if [ ! -r $txt_file ]; then
+    	echo SKIP
+    	continue
+    fi
+
+    if diff -q <(bin/albaCoreSim $mem_file 2>&1) $txt_file &> /dev/null; then
+    	echo PASS
+    else
+    	echo FAIL
+	diff -y <(bin/albaCoreSim $mem_file) $txt_file
+	FAILURES=$(($FAILURES + 1))
+    fi
+done
+
+exit $FAILURES
