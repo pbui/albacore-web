@@ -42,6 +42,7 @@ Once you have it open, you can write the the assembly source text in the
 
 ### TODO
 
+- [ ] Add Label to Text Instructions output
 - [ ] Document code
 - [ ] Improve Error Messages (CLI/WWW)
 - [ ] More test cases
