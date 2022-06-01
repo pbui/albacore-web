@@ -1,3 +1,5 @@
 // not.s: not
 .text
-not r7, r12
+ldi r0, 0x1
+not r1, r0
+quit
