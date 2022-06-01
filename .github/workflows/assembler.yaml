@@ -1,0 +1,21 @@
+name: Assembler
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs: 
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install deps
+      run: sudo apt-get -y update && sudo apt-get -y install gjs gir1.2-glib-2.0
+
+    - name: Run Tests
+      run: bin/albaCoreAsmTests
