@@ -9,6 +9,13 @@ const MEMORY_SEGMENTS = Object.freeze({
 
 /* Classes */
 
+class Line {
+    constructor(number, source) {
+        this.number = number;
+        this.source = source;
+    }
+}
+
 class DataLabel {
     constructor(number, binary, label) {
         this.number = number;
@@ -56,6 +63,8 @@ class Assembler {
              assembler: this.assemble_shl.bind(this)},
             {regex:     /^ldi\s+(?<rw>r[0-9]+)\s*,\s*(?<imm8>.+)$/,
              assembler: this.assemble_ldi.bind(this)},
+            {regex:     /^ld\s+(?<rw>r[0-9]+)\s*,\s*(?<rb>r[0-9]+),\s*(?<imm4>.+)$/,
+             assembler: this.assemble_ld.bind(this)},
             {regex:     /^st\s+(?<ra>r[0-9]+)\s*,\s*(?<rb>r[0-9]+),\s*(?<imm4>.+)$/,
              assembler: this.assemble_st.bind(this)},
             {regex:     /^quit$/,
@@ -105,6 +114,10 @@ class Assembler {
         return "7" + rw + imm8;
     }
 
+    assemble_ld(rw, rb, imm4) {
+        return this.assemble_3op("8", rw, imm4, rb);
+    }
+
     assemble_st(ra, rb, imm4) {
         return this.assemble_3op("9", imm4, ra, rb);
     }
@@ -144,25 +157,25 @@ class Assembler {
         let text_lines = [];
         let memory_segment = MEMORY_SEGMENTS.text;
 
-        for (let source_line of source_lines) {
+        for (let number = 0; number < source_lines.length; number++) {
             // Trim whitespace and C++ comments
             // TODO: Skip C style comments
-            source_line = source_line.trim().replace(/\/\/.*$/, '');
+            let source = source_lines[number].replace(/\/\/.*$/, '').trim();
 
             // Skip empty lines
-            if (!source_line) {
+            if (!source) {
                 continue;
             }
 
-            if (source_line == '.data') {
+            if (source == '.data') {
                 memory_segment = MEMORY_SEGMENTS.data;
-            } else if (source_line == '.text') {
+            } else if (source == '.text') {
                 memory_segment = MEMORY_SEGMENTS.text;
             } else {
                 if (memory_segment == MEMORY_SEGMENTS.data) {
-                    data_lines.push(source_line);
+                    data_lines.push(new Line(number, source));
                 } else {
-                    text_lines.push(source_line);
+                    text_lines.push(new Line(number, source));
                 }
             }
         }
@@ -173,8 +186,9 @@ class Assembler {
     // Memory segment assembly methods
 
     assemble_data_segment(data_lines, data_offset) {
-        for (const source of data_lines) {
+        for (const source_line of data_lines) {
             let parsedLabel = false;
+            let source      = source_line.source;
 
             for (const data_instruction of this.data_instructions) {
                 let match = source.match(data_instruction.regex);
@@ -194,7 +208,8 @@ class Assembler {
             }
 
             if (!parsedLabel) {
-                console.log(`Invalid data label: ${source}`);
+                const line_number = source_line.number;
+                console.log(`Invalid data label: ${source} on line ${line_number}`);
                 return false;
             }
         }
@@ -204,7 +219,7 @@ class Assembler {
 
     assemble_text_segment(text_lines) {
         for (let number = 0; number < text_lines.length; number++) {
-            let source = text_lines[number];
+            let source = text_lines[number].source;
             let foundInstruction = false;
 
             for (const text_instruction of this.text_instructions) {
@@ -222,12 +237,20 @@ class Assembler {
             }
 
             if (!foundInstruction) {
-                console.log(`Invalid text instruction: ${source}`);
+                const line_number = text_lines[number].number;
+                console.log(`Invalid text instruction: ${source} on line ${line_number}`);
                 return false;
             }
         }
 
         return true;
+    }
+
+    assemble_source_lines(source_lines) {
+        const [data_lines, text_lines] = this.parse_segment_lines(source_lines);
+
+        this.assemble_data_segment(data_lines, text_lines.length);
+        this.assemble_text_segment(text_lines);
     }
 
     // Static Assembly method
@@ -239,10 +262,7 @@ class Assembler {
         const source_textarea = document.getElementById("albacore_source");
         const source_lines    = source_textarea.value.split('\n');
 
-        const [data_lines, text_lines] = assembler.parse_segment_lines(source_lines);
-
-        assembler.assemble_data_segment(data_lines, text_lines.length);
-        assembler.assemble_text_segment(text_lines);
+        assembler.assemble_source_lines(source_lines);
 
         var memory_textarea   = document.getElementById("albacore_memory");
         memory_textarea.value = "// .text\n" + assembler.text_memory.join('\n') + "\n\n" +
