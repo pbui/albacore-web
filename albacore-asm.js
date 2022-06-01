@@ -48,15 +48,17 @@ class Assembler {
         this.initialize();
 
         this.data_instructions = [
-            {regex:     /^(?<label>[0-9a-zA-Z]):\s*(?<value>[0-9a-fA-FxX]+)$/,
+            {regex:     /^(?<label>[0-9a-zA-Z]):\s*(?<values>[0-9a-fA-FxX]+)$/,
              assembler: this.assemble_integer.bind(this)},
-            {regex:     /^(?<label>[0-9a-zA-Z]):\s*(?<value>[0-9a-fA-FxX, \t]+)$/,
+            {regex:     /^(?<label>[0-9a-zA-Z]):\s*(?<values>[0-9a-fA-FxX, \t]+)$/,
              assembler: this.assemble_array.bind(this)}
         ]
 
         this.text_instructions = [
             {regex:     /^add\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)$/,
              assembler: this.assemble_add.bind(this)},
+            {regex:     /^sub\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)$/,
+             assembler: this.assemble_sub.bind(this)},
             {regex:     /^or\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)$/,
              assembler: this.assemble_or.bind(this)},
             {regex:     /^shl\s+(?<rw>r[0-9]+)\s*,\s*(?<ra>r[0-9]+),\s*(?<rb>r[0-9]+)$/,
@@ -67,6 +69,10 @@ class Assembler {
              assembler: this.assemble_ld.bind(this)},
             {regex:     /^st\s+(?<ra>r[0-9]+)\s*,\s*(?<rb>r[0-9]+),\s*(?<imm4>.+)$/,
              assembler: this.assemble_st.bind(this)},
+            {regex:     /^br\s+(?<imm8>.+)$/,
+             assembler: this.assemble_br.bind(this)},
+            {regex:     /^bn\s+(?<rb>r[0-9]+),\s*(?<imm8>.+)$/,
+             assembler: this.assemble_bn.bind(this)},
             {regex:     /^quit$/,
              assembler: this.assemble_quit.bind(this)}
         ];
@@ -75,8 +81,10 @@ class Assembler {
     initialize() {
         // Initialize memory segments and default to parsing text segment
         this.data_memory = [];
+        this.data_labels = {};
         this.text_memory = [];
-        this.labels      = {};
+        this.text_labels = {};
+        this.text_number = 0;
     }
 
     // Assembly methods
@@ -98,6 +106,10 @@ class Assembler {
 
     assemble_add(rw, ra, rb) {
         return this.assemble_3op("0", rw, ra, rb);
+    }
+
+    assemble_sub(rw, ra, rb) {
+        return this.assemble_3op("1", rw, ra, rb);
     }
 
     assemble_or(rw, ra, rb) {
@@ -122,6 +134,17 @@ class Assembler {
         return this.assemble_3op("9", imm4, ra, rb);
     }
 
+    assemble_br(imm8) {
+        imm8 = this.parse_operand(imm8, 2);
+        return "a" + imm8 + "0";
+    }
+
+    assemble_bn(rb, imm8) {
+        rb   = this.parse_operand(rb);
+        imm8 = this.parse_operand(imm8, 2);
+        return "c" + imm8 + rb;
+    }
+
     assemble_quit() {
         return "f000";
     }
@@ -129,20 +152,27 @@ class Assembler {
     // Parsing methods
 
     parse_operand(operand, width = 1) {
-        // Parse label operands
+        // Parse data label operands
         var highMatch = operand.match(/high\((?<label>.+)\)/);
         if (highMatch) {
-            return this.labels[highMatch[1]].slice(0, 2);
+            return this.data_labels[highMatch[1]].slice(0, 2);
         }
 
         var lowMatch = operand.match(/low\((?<label>.+)\)/);
         if (lowMatch) {
-            return this.labels[lowMatch[1]].slice(2, 4);
+            return this.data_labels[lowMatch[1]].slice(2, 4);
+        }
+
+        // Parse text label operands
+        if (operand in this.text_labels) {
+            operand = (this.text_labels[operand] - this.text_number).toString();
         }
 
         // Parse integer operands
         if (operand.startsWith("r")) {
             operand = operand.slice(1);
+        } else if (operand.startsWith("-")) {
+            operand = (256 - parseInt(operand.slice(1))).toString();
         }
 
         if (operand.startsWith("0x")) {
@@ -193,12 +223,12 @@ class Assembler {
             for (const data_instruction of this.data_instructions) {
                 let match = source.match(data_instruction.regex);
                 if (match) {
-                    const label   = match[1];
-                    const values  = data_instruction.assembler(match[2]);
+                    const label   = match.groups.label;
+                    const values  = data_instruction.assembler(match.groups.values);
                     const address = data_offset + this.data_memory.length;
 
-                    this.labels[label] = address.toString(16).padStart(4, "0");
-                    this.data_memory   = this.data_memory.concat(values.map((value, index) =>
+                    this.data_labels[label] = address.toString(16).padStart(4, "0");
+                    this.data_memory        = this.data_memory.concat(values.map((value, index) =>
                         new DataLabel(address + index, value, index ? "" : label)
                     ));
 
@@ -220,7 +250,18 @@ class Assembler {
     assemble_text_segment(text_lines) {
         for (let number = 0; number < text_lines.length; number++) {
             let source = text_lines[number].source;
+            let match  = source.match(/^(?<label>[0-9a-zA-Z_]+):\s*(?<source>.+)$/);
+            if (match) {
+                let label                 = match.groups.label.trim();
+                this.text_labels[label]   = number.toString(16).padStart(2, "0");
+                text_lines[number].source = match.groups.source.trim();
+            }
+        }
+
+        for (let number = 0; number < text_lines.length; number++) {
             let foundInstruction = false;
+            let source           = text_lines[number].source;
+            this.text_number     = number;
 
             for (const text_instruction of this.text_instructions) {
                 let match = source.match(text_instruction.regex);
