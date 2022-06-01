@@ -60,6 +60,7 @@ matches the corresponding **memory** image files.
 ### TODO
 
 - [ ] Add Label to Text Instructions output
+- [ ] Handle C style comments (`/* ... */`)
 - [ ] Document code
 - [ ] Improve Error Messages (CLI/WWW)
 - [ ] More test cases
