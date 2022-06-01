@@ -73,6 +73,10 @@ class Assembler {
              assembler: this.assemble_br.bind(this)},
             {regex:     /^bn\s+(?<rb>r[0-9]+),\s*(?<imm8>.+)$/,
              assembler: this.assemble_bn.bind(this)},
+            {regex:     /^jal\s+(?<imm12>.+)$/,
+             assembler: this.assemble_jal.bind(this)},
+            {regex:     /^jr\s+(?<ra>r[0-9]+)$/,
+             assembler: this.assemble_jr.bind(this)},
             {regex:     /^quit$/,
              assembler: this.assemble_quit.bind(this)}
         ];
@@ -143,6 +147,16 @@ class Assembler {
         rb   = this.parse_operand(rb);
         imm8 = this.parse_operand(imm8, 2);
         return "c" + imm8 + rb;
+    }
+
+    assemble_jal(imm12) {
+        imm12 = this.parse_operand(imm12, 3);
+        return "d" + imm12;
+    }
+
+    assemble_jr(ra) {
+        ra = this.parse_operand(ra);
+        return "e" + "0" + ra + "0";
     }
 
     assemble_quit() {
