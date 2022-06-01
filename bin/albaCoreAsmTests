@@ -12,7 +12,7 @@ for asm_file in asm/*.s; do
     	continue
     fi
 
-    if diff -q <(bin/albaCoreAsm $asm_file) $mem_file; then
+    if diff -q <(bin/albaCoreAsm $asm_file 2>&1) $mem_file &> /dev/null; then
     	echo PASS
     else
     	echo FAIL
