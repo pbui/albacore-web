@@ -1,7 +1,8 @@
 # albacore-web: albaCore Assembler and Simulator in JavaScript
 
 This is a simple **assembler** and **simulator** for the **albaCore** computer
-architecture described in [Jay Brockman]'s [Practical Logic and Processor Design with Verilog] written in **JavaScript**.
+architecture described in [Jay Brockman]'s **Practical Logic and Processor Design**
+with Verilog written in **JavaScript**.
 
 ## Assembler
 
@@ -57,9 +58,10 @@ This will use the `bin/albaCoreAsm` command-line **assembler** on all the
 example assembly source files in the `asm` folder and check if the output
 matches the corresponding **memory** image files.
 
-### TODO
+### TODOs
 
 - [ ] Add Label to Text Instructions output
+- [ ] Add `disassmbly` function/class?
 - [ ] Handle C style comments (`/* ... */`)
 - [ ] Document code
 - [ ] Improve Error Messages (CLI/WWW)
@@ -72,11 +74,9 @@ The **simulator ** takes the **memory** image file and executes the program
 instructions using a simulated implementation of the **albaCore** computer
 architecture.
 
-### TODO
+### TODOs
 
 - [ ] Everything :]
 
-
-[Practical Logic and Processor Design with Verilog]: doc/Practical Logic and Processor Design.pdf
 [Jay Brockman]: https://sites.google.com/a/nd.edu/jay-brockman/home
 [Ubuntu]:       https://ubuntu.com
