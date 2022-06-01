@@ -1,0 +1,24 @@
+#!/usr/bin/env gjs
+
+// Imports
+
+imports.searchPath.unshift('lib');
+
+const Sim	= imports.albaCoreSim;
+
+const ByteArray = imports.byteArray;
+const Gio       = imports.gi.Gio;
+const GLib	= imports.gi.GLib;
+
+// Main Execution
+
+const Stdout	  = new Gio.DataOutputStream({base_stream: new Gio.UnixOutputStream({ fd: 1 })});
+const InputString = ByteArray.toString(GLib.file_get_contents(ARGV[0])[1]);
+const Simulator	  = Sim.createSimulator();
+
+Simulator.load_from_string(InputString);
+while (!Simulator.halted) {
+    Simulator.step_once();
+}
+Simulator.dump_registers();
+Simulator.dump_memory();
