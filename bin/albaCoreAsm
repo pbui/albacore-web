@@ -1,0 +1,24 @@
+#!/usr/bin/env gjs
+
+// Imports
+
+imports.searchPath.unshift('lib');
+
+const Asm	= imports.albaCoreAsm;
+
+const ByteArray = imports.byteArray;
+const Gio       = imports.gi.Gio;
+const GLib	= imports.gi.GLib;
+
+// Main Execution
+
+const Stdout	  = new Gio.DataOutputStream({base_stream: new Gio.UnixOutputStream({ fd: 1 })});
+const InputString = ByteArray.toString(GLib.file_get_contents(ARGV[0])[1]);
+const InputLines  = InputString.split("\n");
+const Assembler   = Asm.createAssembler();
+
+Assembler.assemble_source_lines(InputLines);
+
+Stdout.write("// .text\n" + Assembler.text_memory.join('\n'), null);
+Stdout.write("\n\n", null);
+Stdout.write("// .data\n" + Assembler.data_memory.join('\n'), null);
