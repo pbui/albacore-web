@@ -1,0 +1,19 @@
+#!/bin/bash
+
+for asm_file in asm/*.s; do
+    mem_file=${asm_file/.s/.mem};
+
+   printf "Assembling %-50s ... " "$asm_file"
+
+    if [ ! -r $mem_file ]; then
+    	echo SKIP
+    	continue
+    fi
+
+    if diff -q <(bin/albaCoreAsm $asm_file) $mem_file; then
+    	echo PASS
+    else
+    	echo FAIL
+	diff -y <(bin/albaCoreAsm $asm_file) $mem_file
+    fi
+done
