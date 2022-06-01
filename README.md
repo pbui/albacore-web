@@ -1,3 +1,5 @@
+![Assembler](https://github.com/pbui/albacore-web/actions/workflows/assembler.yaml/badge.svg)
+
 # albacore-web: albaCore Assembler and Simulator in JavaScript
 
 This is a simple **assembler** and **simulator** for the **albaCore** computer
