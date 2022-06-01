@@ -40,6 +40,23 @@ Once you have it open, you can write the the assembly source text in the
 `source` textbox and then press the `Assemble` button to generate the
 **memory** image in the `memory` textbox.
 
+### Tests
+
+To test the output of the **assembler**, you can use the `bin/albaCoreAsmTests`
+script:
+
+```bash
+$ ./bin/albaCoreAsmTests
+Assembling asm/arithmetic_operations_on_array_elements.s      ... PASS
+Assembling asm/beef.s                                         ... PASS
+Assembling asm/branching_labels2.s                            ... PASS
+...
+```
+
+This will use the `bin/albaCoreAsm` command-line **assembler** on all the
+example assembly source files in the `asm` folder and check if the output
+matches the corresponding **memory** image files.
+
 ### TODO
 
 - [ ] Add Label to Text Instructions output
