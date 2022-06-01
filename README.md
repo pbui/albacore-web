@@ -63,6 +63,7 @@ matches the corresponding **memory** image files.
 - [ ] Handle C style comments (`/* ... */`)
 - [ ] Document code
 - [ ] Improve Error Messages (CLI/WWW)
+- [ ] Make web interface more aesthetic
 - [ ] More test cases
 
 ## Simulator
